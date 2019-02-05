@@ -1,0 +1,78 @@
+#alaosa
+{
+    margin-top: 8%;
+    margin-left: 3%;
+}
+th
+{
+    size: 200px;color:grey;
+}
+tr:nth-child(even) 
+{
+    background: rgba(250, 250, 250)
+}
+tr:nth-child(odd)
+{
+    background: #FFF
+}
+table
+{
+    text-align: center
+}
+#teksti
+{
+    font-size: 75%;
+    font-weight: bold;
+    font-family: Helvetica;
+}
+#taulujenotsikot
+{
+    font-size: 75%;
+    font-weight: bold;
+    font-family: Helvetica;
+    color: lightgrey;
+}
+
+#ylapalkki
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0 auto;
+    width:100%;
+    height: 50px;
+    background-color: rgb(87, 165, 11);
+}
+#ylapalkki p
+{
+    margin-left: 25px;
+    margin-top: 15px;
+    position: absolute;
+    color:rgba(208,229,191);
+    font-family: Lucida Grande,Lucida Sans,Arial,sans-serif;
+    text-align: left;
+    vertical-align: center;
+}
+
+.nav{
+border:1px solid #ccc;
+border-width:1px 0;
+list-style:none;
+margin:0;
+padding:0;
+}
+.nav li
+{
+display:inline;
+}
+.nav a
+{
+display:inline-block;
+padding:10px;
+color: rgb(87, 165, 11);
+text-decoration: none;
+}
+#tbdata td.red {color:red;}  
+#tbdata td.grey{color: grey;}
+#tbdata2 td.red {color:red;}
+#tbdata2 td.grey{color: grey;}
