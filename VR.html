@@ -23,33 +23,35 @@
         var peruutettu;
         var lahtoAsemanNimi;
         var paateAsemanNimi;
-        var asemat = [];
-        var asemat2= [];
-        var taulu =[];
-                $(function(){
-                    var asematURL ="https://rata.digitraffic.fi/api/v1/metadata/stations";
-        
+        var lahtoAsemat = [];
+        var paateAsemat = [];
+        var taulu = [];
+        $(function()
+        {
+        var asematURL ="https://rata.digitraffic.fi/api/v1/metadata/stations";
+        $('#tbdata2').hide();//piilotetaan toinen html table
             
         $.get( asematURL, function(data) 
         {
-             //Luodaan kaupungeista taulukko
+             //Luodaan kaupunkien nimistä taulukko, jotta voidaan käyttää autocompletea haun helpottamiseksi.
+             //Samoin myös lähtö- ja pääteasemista muodostetut taulukot täytetään asemien koko nimillä ja lyhenteillä myöhempää käyttöä varten.
             for(var luku = 0; luku < data.length; luku++)
             {
                 taulu[luku] = data[luku].stationName;
-                asemat[luku] = data[luku].stationShortCode;
-                asemat2[luku] = data[luku].stationName;
+                lahtoAsemat[luku] = data[luku].stationShortCode;
+                paateAsemat[luku] = data[luku].stationName;
             } 
-            $("#asema").autocomplete({ //asema input ehdottaa kaupunkeja taulukosta, jotta käyttäjä valitsee oikean aseman nimen
+            $("#asema").autocomplete({ //asema input ehdottaa kaupunkeja taulukosta, jotta käyttäjä valitsee oikean aseman nimen saadakseen haluamiansa aikatauluja
                 source: taulu,
                 dataType: 'json'
             });
-                    
-                $('#tbdata2').hide();
-                    
+            
+                
                     $('#nappi').click(function(){
-                        $('#tbdata2').hide();
+                        $('#tbdata2').hide();//painikkeen painamisen jälkeen piilotetaan lähtevien junien table.
                         $('#tbdata').show();
 
+                        //Tyhjennetään taulukko ennen uusien arvojen asettamista poislukien ensimmäinen rivi
                         var tableHeaderRowCount = 1;
                         var table = document.getElementById('tbdata');
                         var rowCount = table.rows.length;
@@ -58,80 +60,83 @@
                         table.deleteRow(tableHeaderRowCount);
                         }
                         
-                        //Tyhjennetään taulukko ennen uusien arvojen asettamista
-                        //Kuitenkin ensimmäinen rivi halutaan säästää, joten suojataan eka rivi
-                        
-                        
-                                var asematURL ="https://rata.digitraffic.fi/api/v1/metadata/stations";
                                   
-                                        var asemannimi = document.getElementById("asema").value;
-                                        
-                                        //HAETUN ASEMAN INDEXIN ETSIMINEN
-                                        var index = -1;
-                                        var val = asemannimi;
-                                        var filteredObj = data.find(function(item, i){
-                                        if(item.stationName === val){
-                                            index = i;
-                                            return i;
-                                        }
-                                        });
-                                        if(index==-1)
-                                        {
-                                            alert("Aseman nimi väärin");
-                                            var tableHeaderRowCount = 1;
-                                            var table = document.getElementById('tbdata');
-                                            var rowCount = table.rows.length;
-                                            for (var i = tableHeaderRowCount; i < rowCount; i++) {
-                                                table.deleteRow(tableHeaderRowCount);
-                                            }
-                                        }
-                                        //INDEXIN HAKU LOPPUU
-                                        //INDEXI HAETTIIN JOTTA ASEMAN LYHENNE SAADAAN ASEMAKOHTAISTEN TIETOJEN HAKUA VARTEN.
+                        var asemannimi = document.getElementById("asema").value; 
+                        //valitaan asemannimi muuttujan arvoksi käyttäjän syöttämän aseman nimi
+                        
+                        //Etsitään haetulle asemalle indeksi, jolla se esiintyy taulukossa
+                        var index = -1;
+                        var val = asemannimi;
+                        var filteredObj = data.find(function(item, i){
+                        if(item.stationName === val){
+                            index = i;
+                            return i;
+                        }
+                        });
+                        if(index==-1)
+                        {
+                            alert("Aseman nimi väärin");
+                            var tableHeaderRowCount = 1;
+                            var table = document.getElementById('tbdata');
+                            var rowCount = table.rows.length;
+                            for (var i = tableHeaderRowCount; i < rowCount; i++) {
+                                table.deleteRow(tableHeaderRowCount);
+                            }
+                        }
+                        //INDEKSIN HAKU LOPPUU
+                        //Indeksi haettiin jotta aseman lyhenne saadaan asemakohtaisten tietojen hakua varten.
 
-                                        asemannimi = data[index].stationName;
-                                        asemakoodi = data[index].stationShortCode; //TÄRKEÄÄ SAADA ASEMAN LYHENNE JOLLA VOIDAAN HAKEA TIETYLLE ASEMALLE SAAPUVAT/LÄHTEVÄT JUNAT
-                                     
+                        asemannimi = data[index].stationName;
+                        asemakoodi = data[index].stationShortCode;//Tärkeää saada aseman lyhenne jolla voidaan hakea tietylle asemalle saapuvat/lähtevät junat
+                        
 
                         var myURL = "https://rata.digitraffic.fi/api/v1//live-trains/station/"+asemakoodi+
-                        "?minutes_before_departure=120&minutes_after_departure=120&minutes_before_arrival=120&minutes_after_arrival=120";
+                        "?minutes_before_departure=300&minutes_after_departure=5&minutes_before_arrival=300&minutes_after_arrival=5";
 
 
                     $.getJSON(myURL, function(data) {
             for(var indeksi = 0; indeksi < data.length; indeksi++)
             {
 
-                var taulukko = data[indeksi];
+                var taulukko = data[indeksi]; //Luodaan taulukko niminen muuttuja, joka sisältää data-taulukon.//taulukko muuttujan avulla voidaan hakea junakohtaisia tietoja.
                 var lastIndex = taulukko.timeTableRows.length-1;
                 
-                paateAsema = taulukko.timeTableRows[lastIndex].stationShortCode;
                 lahtoAsema = taulukko.timeTableRows[0].stationShortCode;
+                paateAsema = taulukko.timeTableRows[lastIndex].stationShortCode;//Haetaan asemalle saapuvien junien lähtö- ja pääteasemat. Asemien nimet ovat vielä lyhennemuodossa
                 
-                const indeksi2 = taulukko.timeTableRows.findIndex(item => item.stationShortCode === asemakoodi);
+                
+                const indeksi2 = taulukko.timeTableRows.findIndex(item => item.stationShortCode === asemakoodi); 
+                //Luodaan indeksi2 muuttuja, joka on asemakoodin paikka taulukossa. Tämän indeksin perusteella voidaan hakea 
+                // junille aikataulut ja uudet ennuste aikataulut, jos juna ei olekaan ajassaan. Haetaan myös tieto, onko yhteys on peruttu.
                 saapumisAika = taulukko.timeTableRows[indeksi2].scheduledTime;
                 oikeaSaapumisAika = taulukko.timeTableRows[indeksi2].liveEstimateTime;
                 peruutettu = taulukko.timeTableRows[indeksi2].cancelled;
                
-                var muuttuja = asemat.indexOf(lahtoAsema);
-                var muuttuja2 = asemat.indexOf(paateAsema);
-                lahtoAsema = asemat2[muuttuja];
-                paateAsema = asemat2[muuttuja2];
-               
+               //Alussa alustetut lähtöasema ja pääteasema taulut tulevat käyttöön, kun aletaan etsimään aseman lyhenteelle vastaavaa pitkää muotoa aseman nimestä
+                var muuttuja = lahtoAsemat.indexOf(lahtoAsema);
+                var muuttuja2 = lahtoAsemat.indexOf(paateAsema);
+                lahtoAsema = paateAsemat[muuttuja];
+                paateAsema = paateAsemat[muuttuja2];
+               //Saapumisaika leikataan ISO8601 muodosta tunneiksi ja minuuteiksi
                 saapumisAika = parseInt((saapumisAika.split(':')[0]).slice(-2))+2+":"+saapumisAika.split(':')[1];
                 
-                if(indeksi2 === 0){continue;}
-                else if(peruutettu == true)
+                //Käyttäjälle näkyvää taulukkoa aletaan alustamaan tiettyjen ehtojen perusteella.
+                if(indeksi2 === 0){continue;}//Jos indeksi on 0, eli juna lähtee käyttäjän valitsemalta asemalta, sitä ei laiteta taulukkoon
+                                                //sillä se ei ole kyseiselle asemalle saapuva juna.
+                else if(peruutettu == true) //Jos yhteys on peruutettu, taulukkoon syötetään junan tiedot, lähtö-ja pääteasemat ja tieto peruutuksesta
+                //kyseisen rivin tekstin väri muutetaan harmaaksi, paitsi viimeisessä solussa se on punainen.
                 {
                     $("#tbdata").append("<tr><td class = grey>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td class = grey>"+lahtoAsema+"</td><td class = grey>"+paateAsema+"</td><td class = red>"+saapumisAika+"<br>cancelled"+"</td></tr>");
 
                 }
                 else
                 {
-                
+                //Jos oikeaa saapumisaikaa, eli ennustetta ei löydy tai se on sama alkuperäisen aikataulun mukaan, lisätään tiedot taulukkoon. Värejä ei muutella
                     if(oikeaSaapumisAika === undefined || oikeaSaapumisAika === saapumisAika){
                         $("#tbdata").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td>"+saapumisAika+"</td></tr>");
                     }
                     else
-                    {
+                    {//Muutoin taulukon viimeiseen soluun lisätään kaksi aikaa, oikea aika ensin ja sitten suluissa alkuperäinen aikataulu. Tekstin väri tässä solussa punainen
                         oikeaSaapumisAika = parseInt((oikeaSaapumisAika.split(':')[0]).slice(-2))+2+":"+oikeaSaapumisAika.split(":")[1];
                         $("#tbdata").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td class = red>"+oikeaSaapumisAika+" "+"<br>("+saapumisAika+")"+"</td></tr>");
                     }
@@ -142,13 +147,11 @@
 
                     
 
-
+        //HYVIN PITKÄLLE SAMAA KOODIA KUIN NAPPI.CLICK FUNKTIOSSA
         $('#nappi2').click(function()
-        {
+        { 
             $('#tbdata').hide();
             $('#tbdata2').show();
-            //Tyhjennetään taulukko ennen uusien arvojen asettamista
-            //Kuitenkin ensimmäinen rivi halutaan säästää, joten suojataan eka rivi
             var tableHeaderRowCount = 1;
             var table = document.getElementById('tbdata2');
             var rowCount = table.rows.length;
@@ -157,46 +160,37 @@
                 table.deleteRow(tableHeaderRowCount);
             }
 
-            var asematURL ="https://rata.digitraffic.fi/api/v1/metadata/stations";
+                var asemannimi = document.getElementById("asema").value;
+                
+                var index = -1;
+                var val = asemannimi;
+                var filteredObj = data.find(function(item, i){
+                if(item.stationName === val){
+                    index = i;
+                    return i;
+                }
+                });
+                if(index==-1)
+                {
+                    alert("Aseman nimi väärin");
+                    var tableHeaderRowCount = 1;
+                    var table = document.getElementById('tbdata');
+                    var rowCount = table.rows.length;
+                    for (var i = tableHeaderRowCount; i < rowCount; i++) {
+                        table.deleteRow(tableHeaderRowCount);
+                    }
+                }
 
-           $.get( asematURL, function(data) 
-                                {
-                                    
-                                        var asemannimi = document.getElementById("asema").value;
-                                        
-                                        //HAETUN ASEMAN INDEXIN ETSIMINEN
-                                        var index = -1;
-                                        var val = asemannimi;
-                                        var filteredObj = data.find(function(item, i){
-                                        if(item.stationName === val){
-                                            index = i;
-                                            return i;
-                                        }
-                                        });
-                                        if(index==-1)
-                                        {
-                                            alert("Aseman nimi väärin");
-                                            var tableHeaderRowCount = 1;
-                                            var table = document.getElementById('tbdata');
-                                            var rowCount = table.rows.length;
-                                            for (var i = tableHeaderRowCount; i < rowCount; i++) {
-                                                table.deleteRow(tableHeaderRowCount);
-                                            }
-                                        }
-                                        //INDEXIN HAKU LOPPUU
-                                        //INDEXI HAETTIIN JOTTA ASEMAN LYHENNE SAADAAN ASEMAKOHTAISTEN TIETOJEN HAKUA VARTEN.
-
-                                        asemannimi = data[index].stationName;
-                                        asemakoodi = data[index].stationShortCode; //TÄRKEÄÄ SAADA ASEMAN LYHENNE JOLLA VOIDAAN HAKEA TIETYLLE ASEMALLE SAAPUVAT/LÄHTEVÄT JUNAT
-                                        
-                                });
+                asemannimi = data[index].stationName;
+                asemakoodi = data[index].stationShortCode;
+            
 
             var myURL = "https://rata.digitraffic.fi/api/v1//live-trains/station/"+asemakoodi+
-            "?minutes_before_departure=60&minutes_after_departure=60&minutes_before_arrival=60&minutes_after_arrival=5";
+                        "?minutes_before_departure=300&minutes_after_departure=5&minutes_before_arrival=300&minutes_after_arrival=5";
 
 
-$.getJSON(myURL, function(data) {
-for(var indeksi = 0; indeksi < data.length; indeksi++)
+        $.getJSON(myURL, function(data) {
+        for(var indeksi = 0; indeksi < data.length; indeksi++)
             {
 
                 var taulukko = data[indeksi];
@@ -204,44 +198,49 @@ for(var indeksi = 0; indeksi < data.length; indeksi++)
                 
                 paateAsema = taulukko.timeTableRows[lastIndex].stationShortCode;
                 lahtoAsema = taulukko.timeTableRows[0].stationShortCode;
-                var muuttuja = asemat.indexOf(lahtoAsema);
-                var muuttuja2 = asemat.indexOf(paateAsema);
-                lahtoAsema = asemat2[muuttuja];
-                paateAsema = asemat2[muuttuja2];
+                var muuttuja = lahtoAsemat.indexOf(lahtoAsema);
+                var muuttuja2 = lahtoAsemat.indexOf(paateAsema);
+                lahtoAsema = paateAsemat[muuttuja];
+                paateAsema = paateAsemat[muuttuja2];
                 
 
                 const indeksi2 = taulukko.timeTableRows.findIndex(item => item.stationShortCode === asemakoodi);
-                const indeksi3 = indeksi2+1;
+                const indeksi3 = indeksi2+1; 
+                //Luodaan indeksi3 muuttuja, koska lähtevien ja saapuvien junien tiedot ovat samassa data taulukossa, joista lähtevät ovat aina jälkimmäisenä.
+                //Tähän tarvitaan siis indeksiä joka yhden isompi kuin saapuville junille.
                 peruutettu = taulukko.timeTableRows[indeksi2].cancelled;
                 
                 if(indeksi2 === lastIndex){continue;}
-                else if(indeksi2 != 0)
-                {
+                //Jos aseman indeksi taulukossa on viimeinen, ei se voi enää lähteä kyseiseltä asemalta joten sitä ei lisätä lähtevien junien taulukkoon
+                else if(indeksi2 != 0) //Jos indeksi2 on eri kuin 0, niin käytetään äskettäin luotua uutta indeksi3 muuttujaa, jotta löydetään
+                {                       //nimenomaan tietyn junan lähtöaika valitulta asemalta.
                 saapumisAika = taulukko.timeTableRows[indeksi3].scheduledTime;
                 oikeaSaapumisAika = taulukko.timeTableRows[indeksi3].liveEstimateTime;
                 saapumisAika = parseInt((saapumisAika.split(':')[0]).slice(-2))+2+":"+saapumisAika.split(':')[1];
-
-                if(oikeaSaapumisAika === undefined || oikeaSaapumisAika === saapumisAika){
-                        $("#tbdata2").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td>"+saapumisAika+"</td></tr>");
-                    }
-                    else
-                    {
-                        oikeaSaapumisAika = parseInt((oikeaSaapumisAika.split(':')[0]).slice(-2))+2+":"+oikeaSaapumisAika.split(":")[1];
-                        $("#tbdata2").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td class = red>"+oikeaSaapumisAika+" "+"<br>("+saapumisAika+")"+"</td></tr>");
-                    }
+                        //Taulukkoihin lisäämisessä pätee samat säännöt kuin saapuvien junien taulukkoon lisäämisessä. Värit muuttuvat, jos aikataulu on muuttunut tai yhteys peruttu.
+                        if(oikeaSaapumisAika === undefined || oikeaSaapumisAika === saapumisAika)
+                        {
+                            $("#tbdata2").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td>"+saapumisAika+"</td></tr>");
+                        }
+                        else
+                        {
+                            oikeaSaapumisAika = parseInt((oikeaSaapumisAika.split(':')[0]).slice(-2))+2+":"+oikeaSaapumisAika.split(":")[1];
+                            $("#tbdata2").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td class = red>"+oikeaSaapumisAika+" "+"<br>("+saapumisAika+")"+"</td></tr>");
+                        }
                 }
                 else if(peruutettu == true)
                 {
                     $("#tbdata").append("<tr><td class = grey>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td class = grey>"+lahtoAsema+"</td><td class = grey>"+paateAsema+"</td><td class = red>"+"cancelled"+"</td></tr>");
 
                 }
-                else
+                else//Jos valittu asema on kyseisen junan lähtöasema, käytetään indeksinä muuttujaa indeksi2, jotta saadaan oikeat tiedot
                 {
                 saapumisAika = taulukko.timeTableRows[indeksi2].scheduledTime;
                 oikeaSaapumisAika = taulukko.timeTableRows[indeksi2].liveEstimateTime;
                 saapumisAika = parseInt((saapumisAika.split(':')[0]).slice(-2))+2+":"+saapumisAika.split(':')[1];
 
-                if(oikeaSaapumisAika === undefined || oikeaSaapumisAika === saapumisAika){
+                    if(oikeaSaapumisAika === undefined || oikeaSaapumisAika === saapumisAika)
+                    {
                         $("#tbdata2").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td>"+saapumisAika+"</td></tr>");
                     }
                     else
@@ -249,11 +248,8 @@ for(var indeksi = 0; indeksi < data.length; indeksi++)
                         oikeaSaapumisAika = parseInt((oikeaSaapumisAika.split(':')[0]).slice(-2))+2+":"+oikeaSaapumisAika.split(":")[1];
                         $("#tbdata2").append("<tr><td>"+taulukko.trainType + " " +taulukko.trainNumber+"</td><td>"+lahtoAsema+"</td><td>"+paateAsema+"</td><td class = red>"+oikeaSaapumisAika+" "+"<br>("+saapumisAika+")"+"</td></tr>");
                     }
-                }
-                
-                    
+                } 
             }      
-            
         });
         });
     });
